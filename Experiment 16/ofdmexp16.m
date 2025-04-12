@@ -1,0 +1,14 @@
+N = 64; 
+Ncp = 16; 
+Nfft = N + Ncp; 
+data = randi([0,1], N, 1); 
+modulated_symbols = qammod(data, 4); 
+time_domain_symbols = ifft(modulated_symbols, Nfft); 
+time_domain_symbols_cp = [time_domain_symbols(end-Ncp+1:end); 
+time_domain_symbols]; 
+transmitted_signal = time_domain_symbols_cp; 
+received_signal = transmitted_signal(Ncp+1:end); 
+frequency_domain_symbols = fft(received_signal, Nfft); 
+demodulated_symbols = qamdemod(frequency_domain_symbols, 4); 
+BER = sum(demodulated_symbols) / length(data); 
+ disp(['Bit Error Rate: ', num2str(BER)]);
