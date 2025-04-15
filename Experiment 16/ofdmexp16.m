@@ -1,14 +1,20 @@
-N = 64; 
-Ncp = 16; 
-Nfft = N + Ncp; 
-data = randi([0,1], N, 1); 
-modulated_symbols = qammod(data, 4); 
-time_domain_symbols = ifft(modulated_symbols, Nfft); 
-time_domain_symbols_cp = [time_domain_symbols(end-Ncp+1:end); 
-time_domain_symbols]; 
-transmitted_signal = time_domain_symbols_cp; 
-received_signal = transmitted_signal(Ncp+1:end); 
-frequency_domain_symbols = fft(received_signal, Nfft); 
-demodulated_symbols = qamdemod(frequency_domain_symbols, 4); 
-BER = sum(demodulated_symbols) / length(data); 
- disp(['Bit Error Rate: ', num2str(BER)]);
+clc; clear; close all;
+
+N = 64;         % Number of subcarriers
+Ncp = 16;       % Cyclic prefix length
+
+% --- Transmitter ---
+data = randi([0 1], N, 1);                  % Random bits
+modData = qammod(data, 4);                  % QPSK modulation
+ifftData = ifft(modData);                   % IFFT to get time domain
+tx = [ifftData(end-Ncp+1:end); ifftData];   % Add cyclic prefix
+
+% --- Channel (no noise or fading here) ---
+rx = tx(Ncp+1:end);                         % Remove cyclic prefix
+
+% --- Receiver ---
+fftData = fft(rx);                          % FFT back to freq domain
+demodData = qamdemod(fftData, 4);           % Demodulation
+BER = sum(demodData ~= data) / length(data);% Bit Error Rate
+
+disp(['Bit Error Rate: ', num2str(BER)]);
