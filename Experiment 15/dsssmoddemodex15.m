@@ -1,26 +1,30 @@
-%% Parameters 
-numBits = 1000; 
-chipSequenceLength = 31; 
-Eb_No_dB = 10; 
-data = randi([0,1], 1, numBits); 
-chipSequence = randi([0,1], 1, chipSequenceLength); 
-modulatedData = 2 * data - 1; 
-spreadData = kron(modulatedData, chipSequence); 
-Eb_No_linear = 10^(Eb_No_dB/10); 
-noiseVar = 1 / (2 * Eb_No_linear); 
-noise = sqrt(noiseVar) * randn(1, length(spreadData)); 
-receivedSignal = spreadData + noise; 
-correlatedSignal = conv(receivedSignal, fliplr(chipSequence)); 
-output = correlatedSignal(chipSequenceLength:chipSequenceLength:end); 
-demodulatedData = sign(output); 
-figure; 
-subplot(2,1,1); 
-plot(data); 
-title('Original Data'); 
-xlabel('Bit Index'); 
-ylabel('Value'); 
-subplot(2,1,2); 
-plot(demodulatedData); 
-title('Demodulated Data'); 
-xlabel('Bit Index'); 
- ylabel('Value')
+clc; clear; close all;
+
+% --- Parameters ---
+numBits = 1000;
+chipLen = 31;
+EbNo_dB = 10;
+
+% --- Generate data and chip sequence ---
+data = randi([0 1], 1, numBits);
+chipSeq = randi([0 1], 1, chipLen);
+
+% --- Modulate (BPSK) and Spread ---
+modData = 2*data - 1;                 % BPSK: 0->-1, 1->+1
+spreadData = kron(modData, chipSeq); % Spreading using Kronecker product
+
+% --- Add AWGN Noise ---
+EbNo = 10^(EbNo_dB/10);
+noiseVar = 1 / (2 * EbNo);
+noise = sqrt(noiseVar) * randn(1, length(spreadData));
+rx = spreadData + noise;
+
+% --- Despread and Demodulate ---
+correlation = conv(rx, fliplr(chipSeq)); 
+samples = correlation(chipLen:chipLen:end);
+demodData = samples > 0;
+
+% --- Plot ---
+figure;
+subplot(2,1,1); stem(data(1:50)); title('Original Data'); ylabel('Bit'); xlabel('Index');
+subplot(2,1,2); stem(demodData(1:50)); title('Demodulated Data'); ylabel('Bit'); xlabel('Index');
